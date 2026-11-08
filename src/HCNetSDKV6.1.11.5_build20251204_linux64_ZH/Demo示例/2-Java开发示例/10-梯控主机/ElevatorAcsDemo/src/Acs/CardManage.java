@@ -1,0 +1,639 @@
+package Acs;
+
+import Commom.ErrorCode;
+import NetSDKDemo.HCNetSDK;
+import com.sun.jna.Pointer;
+import com.sun.jna.ptr.IntByReference;
+
+import javax.swing.*;
+import java.io.UnsupportedEncodingException;
+
+import static Acs.AcsMain.hCNetSDK;
+
+/**
+
+ * @create 2021-03-12-13:53
+ * 以卡为中心，先下发卡参数（可以一起下发工号），再根据卡号下发人脸、指纹等参数
+ * 卡管理模块，实现功能：卡下发、卡获取(单张、所有)、卡删除（单张、所有）、卡计划模块设置
+ */
+public class CardManage {
+    public static short iPlanTemplateNumber;
+
+    /**
+     * 卡下发
+     *
+     * @param lUserID 用户登录句柄
+     * @param CardNo 卡号
+     * @param iPlanTemplateNumber 关联门计划模板，计划模板的配置可以参考卡计划模板配置模块，(下发卡前要设置好计划模板)
+     * @throws UnsupportedEncodingException
+     * @throws InterruptedException
+     */
+    public static void setOneCard(int lUserID, String CardNo, short iPlanTemplateNumber) throws UnsupportedEncodingException, InterruptedException {
+        HCNetSDK.NET_DVR_CARD_COND struCardCond = new HCNetSDK.NET_DVR_CARD_COND();
+        struCardCond.read();
+        struCardCond.dwSize = struCardCond.size();
+        struCardCond.dwCardNum = 1;  //下发一张
+        struCardCond.write();
+        Pointer ptrStruCond = struCardCond.getPointer();
+        int m_lSetCardCfgHandle = hCNetSDK.NET_DVR_StartRemoteConfig(lUserID, HCNetSDK.NET_DVR_SET_CARD, ptrStruCond, struCardCond.size(), null, null);
+        if (m_lSetCardCfgHandle == -1) {
+            System.out.println("建立下发卡长连接失败，错误码为" + hCNetSDK.NET_DVR_GetLastError());
+            return;
+        } else {
+            System.out.println("建立下发卡长连接成功！");
+        }
+        HCNetSDK.NET_DVR_CARD_RECORD struCardRecord = new HCNetSDK.NET_DVR_CARD_RECORD();
+        struCardRecord.read();
+        struCardRecord.dwSize = struCardRecord.size();
+        for (int i = 0; i < HCNetSDK.ACS_CARD_NO_LEN; i++) {
+            struCardRecord.byCardNo[i] = 0;
+        }
+        for (int i = 0; i < CardNo.length(); i++) {
+            struCardRecord.byCardNo[i] = CardNo.getBytes()[i];
+        }
+        struCardRecord.byCardType = 1; //普通卡
+        struCardRecord.byLeaderCard = 0; //是否为首卡，0-否，1-是
+        struCardRecord.byUserType = 0; //用户类型：0– 普通用户，1- 管理员用户
+        //门权限（梯控的楼层权限、锁权限），数组下标对应门编号-1，值为1表示有权限，0表示无权限
+        struCardRecord.byDoorRight[0] = 1; //1层有权限
+        struCardRecord.byDoorRight[1] =1; //2层有权限
+        struCardRecord.wCardRightPlan[0] = iPlanTemplateNumber;   //关联门计划模板，计划模板的配置可以参考卡计划模板配置模块，(下发卡前要设置好计划模板)
+        struCardRecord.struValid.byEnable = 1;    //卡有效期使能，下面是卡有效期从2000-1-1 11:11:11到2030-1-1 11:11:11
+        struCardRecord.struValid.byBeginTimeFlag =1;
+        struCardRecord.struValid.byEnableTimeFlag =1 ;
+        struCardRecord.struValid.struBeginTime.wYear = 2023;
+        struCardRecord.struValid.struBeginTime.byMonth = 1;
+        struCardRecord.struValid.struBeginTime.byDay = 1;
+        struCardRecord.struValid.struBeginTime.byHour = 0;
+        struCardRecord.struValid.struBeginTime.byMinute = 0;
+        struCardRecord.struValid.struBeginTime.bySecond = 0;
+        struCardRecord.struValid.struEndTime.wYear = 2030;
+        struCardRecord.struValid.struEndTime.byMonth = 12;
+        struCardRecord.struValid.struEndTime.byDay = 30;
+        struCardRecord.struValid.struEndTime.byHour = 23;
+        struCardRecord.struValid.struEndTime.byMinute = 59;
+        struCardRecord.struValid.struEndTime.bySecond = 59;
+
+        struCardRecord.write();
+        HCNetSDK.NET_DVR_CARD_STATUS struCardStatus = new HCNetSDK.NET_DVR_CARD_STATUS();
+        struCardStatus.read();
+        struCardStatus.dwSize = struCardStatus.size();
+        struCardStatus.write();
+        IntByReference pInt = new IntByReference(0);
+        while (true) {
+            int dwState = hCNetSDK.NET_DVR_SendWithRecvRemoteConfig(m_lSetCardCfgHandle, struCardRecord.getPointer(), struCardRecord.size(), struCardStatus.getPointer(), struCardStatus.size(), pInt);
+            struCardStatus.read();
+            if (dwState == -1) {
+                System.out.println("NET_DVR_SendWithRecvRemoteConfig接口调用失败，错误码：" + hCNetSDK.NET_DVR_GetLastError());
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_NEED_WAIT) {
+                System.out.println("配置等待");
+                Thread.sleep(10);
+                continue;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_FAILED) {
+                System.out.println("下发卡失败, 卡号: " + new String(struCardStatus.byCardNo).trim() + ", 错误信息:" + ErrorCode.getDescription(struCardStatus.dwErrorCode));
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_EXCEPTION) {
+                System.out.println("下发卡异常, 卡号: " + new String(struCardStatus.byCardNo).trim() + ", 错误信息:" + ErrorCode.getDescription(struCardStatus.dwErrorCode));
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_SUCCESS) {
+                if (struCardStatus.dwErrorCode != 0) {
+                    System.out.println("下发卡成功,但是错误码信息： " + ErrorCode.getDescription(struCardStatus.dwErrorCode) + ", 卡号：" + new String(struCardStatus.byCardNo).trim());
+                } else {
+                    System.out.println("下发卡成功, 卡号: " + new String(struCardStatus.byCardNo).trim() + ", 状态：" + struCardStatus.byStatus);
+                }
+                continue;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_FINISH) {
+                System.out.println("下发卡完成");
+                break;
+            }
+        }
+        if (!hCNetSDK.NET_DVR_StopRemoteConfig(m_lSetCardCfgHandle)) {
+            System.out.println("NET_DVR_StopRemoteConfig接口调用失败，错误码：" + hCNetSDK.NET_DVR_GetLastError());
+        } else {
+            System.out.println("NET_DVR_StopRemoteConfig接口成功\n");
+        }
+    }
+
+    /**
+     * 批量卡号下发
+     *
+     * @param lUserID 用户登录句柄
+     * @param CardNo 卡号
+     * @param iEmployeeNo 工号
+     * @param iNum 下发张数
+     * @throws UnsupportedEncodingException
+     * @throws InterruptedException
+     */
+    public static void setMultiCard(int lUserID, String[] CardNo, int[] iEmployeeNo, int iNum) throws UnsupportedEncodingException, InterruptedException {
+        HCNetSDK.NET_DVR_CARD_COND struCardCond = new HCNetSDK.NET_DVR_CARD_COND();
+        struCardCond.read();
+        struCardCond.dwSize = struCardCond.size();
+        struCardCond.dwCardNum = iNum;  //下发张数
+        struCardCond.write();
+        Pointer ptrStruCond = struCardCond.getPointer();
+        int m_lSetMultiCardCfgHandle = hCNetSDK.NET_DVR_StartRemoteConfig(lUserID, HCNetSDK.NET_DVR_SET_CARD, ptrStruCond, struCardCond.size(), null, null);
+        if (m_lSetMultiCardCfgHandle == -1) {
+            System.out.println("建立下发卡长连接失败，错误码为" + hCNetSDK.NET_DVR_GetLastError());
+            return;
+        } else {
+            System.out.println("建立下发卡长连接成功！");
+        }
+        HCNetSDK.NET_DVR_CARD_RECORD[] struCardRecord = (HCNetSDK.NET_DVR_CARD_RECORD[]) new HCNetSDK.NET_DVR_CARD_RECORD().toArray(iNum);
+        HCNetSDK.NET_DVR_CARD_STATUS struCardStatus = new HCNetSDK.NET_DVR_CARD_STATUS();
+        struCardStatus.read();
+        struCardStatus.dwSize = struCardStatus.size();
+        struCardStatus.write();
+        IntByReference pInt = new IntByReference(0);
+        for (int i = 0; i < iNum; i++) {
+            struCardRecord[i].read();
+            struCardRecord[i].dwSize = struCardRecord[i].size();
+            for (int j = 0; j < HCNetSDK.ACS_CARD_NO_LEN; j++) {
+                struCardRecord[i].byCardNo[j] = 0;
+            }
+            System.arraycopy(CardNo[i].getBytes(), 0, struCardRecord[i].byCardNo, 0, CardNo[i].getBytes().length);
+            struCardRecord[i].byCardType = 1; //普通卡
+            struCardRecord[i].byLeaderCard = 0; //是否为首卡，0-否，1-是
+            struCardRecord[i].byUserType = 0;
+            struCardRecord[i].byDoorRight[0] = 1; //门1有权限
+            struCardRecord[i].wCardRightPlan[0] = iPlanTemplateNumber;//关联门计划模板，使用了前面配置的计划模板
+            struCardRecord[i].struValid.byEnable = 1;    //卡有效期使能，下面是卡有效期从2000-1-1 11:11:11到2030-1-1 11:11:11
+            struCardRecord[i].struValid.struBeginTime.wYear = 2000;
+            struCardRecord[i].struValid.struBeginTime.byMonth = 1;
+            struCardRecord[i].struValid.struBeginTime.byDay = 1;
+            struCardRecord[i].struValid.struBeginTime.byHour = 11;
+            struCardRecord[i].struValid.struBeginTime.byMinute = 11;
+            struCardRecord[i].struValid.struBeginTime.bySecond = 11;
+            struCardRecord[i].struValid.struEndTime.wYear = 2030;
+            struCardRecord[i].struValid.struEndTime.byMonth = 1;
+            struCardRecord[i].struValid.struEndTime.byDay = 1;
+            struCardRecord[i].struValid.struEndTime.byHour = 11;
+            struCardRecord[i].struValid.struEndTime.byMinute = 11;
+            struCardRecord[i].struValid.struEndTime.bySecond = 11;
+            struCardRecord[i].dwEmployeeNo = iEmployeeNo[i]; //工号
+            if ((AcsMain.iCharEncodeType == 0) || (AcsMain.iCharEncodeType == 1) || (AcsMain.iCharEncodeType == 2)) {
+                byte[] strCardName = "张三".getBytes("GBK");  //姓名
+                for (int j = 0; j < HCNetSDK.NAME_LEN; j++) {
+                    struCardRecord[i].byName[j] = 0;
+                }
+                System.arraycopy(strCardName, 0, struCardRecord[i].byName, 0, strCardName.length);
+            }
+            if (AcsMain.iCharEncodeType == 6) {
+                byte[] strCardName = "张三".getBytes("UTF-8");  //姓名
+                for (int j = 0; j < HCNetSDK.NAME_LEN; j++) {
+                    struCardRecord[i].byName[j] = 0;
+                }
+                System.arraycopy(strCardName, 0, struCardRecord[i].byName, 0, strCardName.length);
+            }
+            struCardRecord[i].write();
+            int dwState = hCNetSDK.NET_DVR_SendWithRecvRemoteConfig(m_lSetMultiCardCfgHandle, struCardRecord[i].getPointer(), struCardRecord[i].size(), struCardStatus.getPointer(), struCardStatus.size(), pInt);
+            struCardStatus.read();
+            if (dwState == -1) {
+                System.out.println("NET_DVR_SendWithRecvRemoteConfig接口调用失败，错误码：" + hCNetSDK.NET_DVR_GetLastError());
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_FAILED) {
+                System.out.println("下发卡失败, 卡号: " + new String(struCardStatus.byCardNo).trim() + ", 错误码信息：" + ErrorCode.getDescription(struCardStatus.dwErrorCode));
+                //可以继续下发下一个
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_EXCEPTION) {
+                System.out.println("下发卡异常, 卡号: " + new String(struCardStatus.byCardNo).trim() + ",错误码信息：" + ErrorCode.getDescription(struCardStatus.dwErrorCode));
+                //异常是长连接异常，不能继续下发后面的数据，需要重新建立长连接
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_SUCCESS) {
+                if (struCardStatus.dwErrorCode != 0) {
+                    System.out.println("下发卡失败,错误码信息：" + ErrorCode.getDescription(struCardStatus.dwErrorCode) + ", 卡号：" + new String(struCardStatus.byCardNo).trim());
+                } else {
+                    System.out.println("下发卡成功, 卡号: " + new String(struCardStatus.byCardNo).trim() + ", 状态：" + struCardStatus.byStatus);
+                }
+                //可以继续下发下一个
+            } else {
+                System.out.println("其他状态：" + dwState);
+            }
+        }
+        if (!hCNetSDK.NET_DVR_StopRemoteConfig(m_lSetMultiCardCfgHandle)) {
+            System.out.println("NET_DVR_StopRemoteConfig接口调用失败，错误码：" + hCNetSDK.NET_DVR_GetLastError());
+        } else {
+            System.out.println("NET_DVR_StopRemoteConfig接口成功\n");
+        }
+    }
+
+    /**
+     * 获取（查询）一张卡
+     *
+     * @param lUserID 用户登录句柄
+     * @param CardNo 卡号
+     */
+    public static void getOneCard(int lUserID, String CardNo) {
+        HCNetSDK.NET_DVR_CARD_COND struCardCond = new HCNetSDK.NET_DVR_CARD_COND();
+        struCardCond.read();
+        struCardCond.dwSize = struCardCond.size();
+        struCardCond.dwCardNum = 1;  //查询一个卡参数
+        struCardCond.write();
+        Pointer ptrStruCond = struCardCond.getPointer();
+        int m_lGetCardCfgHandle = hCNetSDK.NET_DVR_StartRemoteConfig(lUserID, HCNetSDK.NET_DVR_GET_CARD, ptrStruCond, struCardCond.size(), null, null);
+        if (m_lGetCardCfgHandle == -1) {
+            System.out.println("建立查询卡参数长连接失败，错误码为：" + hCNetSDK.NET_DVR_GetLastError());
+            return;
+        } else {
+            System.out.println("建立查询卡参数长连接成功！");
+        }
+        //查找指定卡号的参数，需要下发查找的卡号条件
+        HCNetSDK.NET_DVR_CARD_SEND_DATA struCardNo = new HCNetSDK.NET_DVR_CARD_SEND_DATA();
+        struCardNo.read();
+        struCardNo.dwSize = struCardNo.size();
+        for (int i = 0; i < HCNetSDK.ACS_CARD_NO_LEN; i++) {
+            struCardNo.byCardNo[i] = 0;
+        }
+        for (int i = 0; i < CardNo.length(); i++) {
+            struCardNo.byCardNo[i] = CardNo.getBytes()[i];
+        }
+        struCardNo.write();
+        HCNetSDK.NET_DVR_CARD_RECORD struCardRecord = new HCNetSDK.NET_DVR_CARD_RECORD();
+        struCardRecord.read();
+        IntByReference pInt = new IntByReference(0);
+        while (true) {
+            int dwState = hCNetSDK.NET_DVR_SendWithRecvRemoteConfig(m_lGetCardCfgHandle, struCardNo.getPointer(), struCardNo.size(),
+                    struCardRecord.getPointer(), struCardRecord.size(), pInt);
+            struCardRecord.read();
+            if (dwState == -1) {
+                System.out.println("NET_DVR_SendWithRecvRemoteConfig查询卡参数调用失败，错误码：" + hCNetSDK.NET_DVR_GetLastError());
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_NEED_WAIT) {
+                System.out.println("配置等待");
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                continue;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_FAILED) {
+                System.out.println("获取卡参数失败, 卡号: " + CardNo);
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_EXCEPTION) {
+                System.out.println("获取卡参数异常, 卡号: " + CardNo);
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_SUCCESS) {
+                try {
+                    String strName = "";
+                    if ((AcsMain.iCharEncodeType == 0) || (AcsMain.iCharEncodeType == 1) || (AcsMain.iCharEncodeType == 2)) {
+                        strName = new String(struCardRecord.byName, "GBK").trim();
+                    }
+                    if (AcsMain.iCharEncodeType == 6) {
+                        strName = new String(struCardRecord.byName, "UTF-8").trim();
+                    }
+                    //获取的卡信息打印
+                    System.out.println("获取卡参数成功, 卡号: " + new String(struCardRecord.byCardNo).trim()
+                            + ", 卡类型：" + struCardRecord.byCardType
+                            + ", 姓名：" + strName+",卡计划模板："+ new Short(String.valueOf(struCardRecord.wCardRightPlan[0])));
+                    System.out.println("是否限制起始时间的标志byBeginTimeFlag :"+struCardRecord.struValid.byEnableTimeFlag);
+                    System.out.println("是否限制终止时间的标志byEnableTimeFlag  :"+struCardRecord.struValid.byBeginTimeFlag);
+
+                } catch (UnsupportedEncodingException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                continue;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_FINISH) {
+                System.out.println("获取卡参数完成");
+                break;
+            }
+        }
+        if (!hCNetSDK.NET_DVR_StopRemoteConfig(m_lGetCardCfgHandle)) {
+            System.out.println("NET_DVR_StopRemoteConfig接口调用失败，错误码：" + hCNetSDK.NET_DVR_GetLastError());
+        } else {
+            System.out.println("NET_DVR_StopRemoteConfig接口成功\n");
+        }
+    }
+
+    /**
+     * 获取所有卡
+     *
+     * @param lUserID 用户登录句柄
+     */
+    public static void getAllCard(int lUserID) {
+        HCNetSDK.NET_DVR_CARD_COND struCardCond = new HCNetSDK.NET_DVR_CARD_COND();
+        struCardCond.read();
+        struCardCond.dwSize = struCardCond.size();
+        struCardCond.dwCardNum = 0xffffffff; //查询所有卡
+        struCardCond.write();
+        Pointer ptrStruCond = struCardCond.getPointer();
+        int m_lGetAllCardCfgHandle = hCNetSDK.NET_DVR_StartRemoteConfig(lUserID, HCNetSDK.NET_DVR_GET_CARD, ptrStruCond, struCardCond.size(), null, null);
+        if (m_lGetAllCardCfgHandle == -1) {
+            System.out.println("建立查询卡长连接失败，错误码为" + hCNetSDK.NET_DVR_GetLastError());
+            return;
+        } else {
+            System.out.println("建立查询卡长连接成功！");
+        }
+        HCNetSDK.NET_DVR_CARD_RECORD struCardRecord = new HCNetSDK.NET_DVR_CARD_RECORD();
+        struCardRecord.read();
+        struCardRecord.dwSize = struCardRecord.size();
+        struCardRecord.write();
+        IntByReference pInt = new IntByReference(0);
+        while (true) {
+            int dwState = hCNetSDK.NET_DVR_GetNextRemoteConfig(m_lGetAllCardCfgHandle, struCardRecord.getPointer(), struCardRecord.size());
+            struCardRecord.read();
+            if (dwState == -1) {
+                System.out.println("NET_DVR_SendWithRecvRemoteConfig接口调用失败，错误码：" + hCNetSDK.NET_DVR_GetLastError());
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_NEED_WAIT) {
+                System.out.println("配置等待");
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                continue;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_FAILED) {
+                System.out.println("获取卡参数失败");
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_EXCEPTION) {
+                System.out.println("获取卡参数异常");
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_SUCCESS) {
+                try {
+                    String strName = "";
+                    if ((AcsMain.iCharEncodeType == 0) || (AcsMain.iCharEncodeType == 1) || (AcsMain.iCharEncodeType == 2)) {
+                        strName = new String(struCardRecord.byName, "GBK").trim();
+                    }
+                    if (AcsMain.iCharEncodeType == 6) {
+                        strName = new String(struCardRecord.byName, "UTF-8").trim();
+                    }
+                    //获取的卡信息打印
+                    System.out.println("获取卡参数成功, 卡号: " + new String(struCardRecord.byCardNo).trim()
+                            + ", 卡类型：" + struCardRecord.byCardType
+                            + ", 姓名：" + strName);
+                } catch (UnsupportedEncodingException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                continue;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_FINISH) {
+                System.out.println("获取卡参数完成");
+                break;
+            }
+        }
+        if (!hCNetSDK.NET_DVR_StopRemoteConfig(m_lGetAllCardCfgHandle)) {
+            System.out.println("NET_DVR_StopRemoteConfig接口调用失败，错误码：" + hCNetSDK.NET_DVR_GetLastError());
+        } else {
+            System.out.println("NET_DVR_StopRemoteConfig接口成功\n");
+        }
+    }
+
+    /**
+     * 删除单张卡（删除单张卡号之前要先删除这张卡关联的人脸和指纹信息）
+     *
+     * @param lUserID 用户登录句柄
+     * @param CardNo 卡号
+     * @throws UnsupportedEncodingException
+     * @throws InterruptedException
+     */
+    public static void delOneCard(int lUserID, String CardNo) throws UnsupportedEncodingException, InterruptedException {
+        HCNetSDK.NET_DVR_CARD_COND struCardCond = new HCNetSDK.NET_DVR_CARD_COND();
+        struCardCond.read();
+        struCardCond.dwSize = struCardCond.size();
+        struCardCond.dwCardNum = 1;  //删除一张卡号
+        struCardCond.write();
+        Pointer ptrStruCond = struCardCond.getPointer();
+        int m_lDelCardCfgHandle = hCNetSDK.NET_DVR_StartRemoteConfig(lUserID, HCNetSDK.NET_DVR_DEL_CARD, ptrStruCond, struCardCond.size(), null, null);
+        if (m_lDelCardCfgHandle == -1) {
+            System.out.println("建立删除卡长连接失败，错误码为" + hCNetSDK.NET_DVR_GetLastError());
+            return;
+        } else {
+            System.out.println("建立删除卡长连接成功！");
+        }
+        HCNetSDK.NET_DVR_CARD_SEND_DATA struCardData = new HCNetSDK.NET_DVR_CARD_SEND_DATA();
+        struCardData.read();
+        struCardData.dwSize = struCardData.size();
+        for (int i = 0; i < HCNetSDK.ACS_CARD_NO_LEN; i++) {
+            struCardData.byCardNo[i] = 0;
+        }
+        for (int i = 0; i < CardNo.length(); i++) {
+            struCardData.byCardNo[i] = CardNo.getBytes()[i];
+        }
+        struCardData.write();
+        HCNetSDK.NET_DVR_CARD_STATUS struCardStatus = new HCNetSDK.NET_DVR_CARD_STATUS();
+        struCardStatus.read();
+        struCardStatus.dwSize = struCardStatus.size();
+        struCardStatus.write();
+        IntByReference pInt = new IntByReference(0);
+        while (true) {
+            int dwState = hCNetSDK.NET_DVR_SendWithRecvRemoteConfig(m_lDelCardCfgHandle, struCardData.getPointer(), struCardData.size(), struCardStatus.getPointer(), struCardStatus.size(), pInt);
+            struCardStatus.read();
+            if (dwState == -1) {
+                System.out.println("NET_DVR_SendWithRecvRemoteConfig接口调用失败，错误码：" + hCNetSDK.NET_DVR_GetLastError());
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_NEED_WAIT) {
+                System.out.println("配置等待");
+                Thread.sleep(10);
+                continue;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_FAILED) {
+                System.out.println("删除卡失败, 卡号: " + new String(struCardStatus.byCardNo).trim() + ",错误码信息：" + ErrorCode.getDescription(struCardStatus.dwErrorCode) );
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_EXCEPTION) {
+                System.out.println("删除卡异常, 卡号: " + new String(struCardStatus.byCardNo).trim() + ", 错误码信息：" + ErrorCode.getDescription(struCardStatus.dwErrorCode) );
+                break;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_SUCCESS) {
+                if (struCardStatus.dwErrorCode != 0) {
+                    System.out.println("删除卡成功,但是错误码信息：" + ErrorCode.getDescription(struCardStatus.dwErrorCode) + ", 卡号：" + new String(struCardStatus.byCardNo).trim());
+                } else {
+                    System.out.println("删除卡成功, 卡号: " + new String(struCardStatus.byCardNo).trim() + ", 状态：" + struCardStatus.byStatus);
+                }
+                continue;
+            } else if (dwState == HCNetSDK.NET_SDK_CONFIG_STATUS_FINISH) {
+                System.out.println("删除卡完成");
+                break;
+            }
+        }
+        if (!hCNetSDK.NET_DVR_StopRemoteConfig(m_lDelCardCfgHandle)) {
+            System.out.println("NET_DVR_StopRemoteConfig接口调用失败，错误码：" + hCNetSDK.NET_DVR_GetLastError());
+        } else {
+            System.out.println("NET_DVR_StopRemoteConfig接口成功\n");
+        }
+    }
+
+    /**
+     * 设备中要清除所有已经下发的卡号
+     * @param lUserID 用户登录句柄
+     */
+    public static void cleanCardInfo(int lUserID) {
+        //清空所有卡号
+        HCNetSDK.NET_DVR_ACS_PARAM_TYPE struAcsPapamType = new HCNetSDK.NET_DVR_ACS_PARAM_TYPE();
+        struAcsPapamType.read();
+        struAcsPapamType.dwSize = struAcsPapamType.size();
+        struAcsPapamType.dwParamType = HCNetSDK.ACS_PARAM_CARD;  //清空卡参数
+        struAcsPapamType.wLocalControllerID = 0;    //  就地控制器序号[1,255],0代表门禁主机
+        struAcsPapamType.write();
+        boolean b_AcsCard = hCNetSDK.NET_DVR_RemoteControl(lUserID, HCNetSDK.NET_DVR_CLEAR_ACS_PARAM, struAcsPapamType.getPointer(), struAcsPapamType.size());
+        if (b_AcsCard == false) {
+            System.out.println("清空卡号错误，错误码为" + hCNetSDK.NET_DVR_GetLastError());
+            return;
+        } else {
+            System.out.println("清空卡号成功");
+        }
+    }
+
+    /**
+     * 卡计划模板配置
+     *
+     * @param lUserID 用户登录句柄
+     * @param iPlanTemplateNumber 计划模板编号，从1开始，最大值从门禁能力集获取
+     */
+    public static void setCardTemplate(int lUserID, int iPlanTemplateNumber) {
+        //设置卡权限计划模板参数
+        HCNetSDK.NET_DVR_PLAN_TEMPLATE_COND struPlanCond = new HCNetSDK.NET_DVR_PLAN_TEMPLATE_COND();
+        struPlanCond.dwSize = struPlanCond.size();
+        struPlanCond.dwPlanTemplateNumber = iPlanTemplateNumber;//计划模板编号，从1开始，最大值从门禁能力集获取
+        struPlanCond.wLocalControllerID = 0;//就地控制器序号[1,64]，0表示门禁主机
+        struPlanCond.write();
+        HCNetSDK.NET_DVR_PLAN_TEMPLATE struPlanTemCfg = new HCNetSDK.NET_DVR_PLAN_TEMPLATE();
+        struPlanTemCfg.dwSize = struPlanTemCfg.size();
+        struPlanTemCfg.byEnable = 1; //是否使能：0- 否，1- 是
+        struPlanTemCfg.dwWeekPlanNo = 2;//周计划编号，0表示无效
+        struPlanTemCfg.dwHolidayGroupNo[0] = 0;//假日组编号，按值表示，采用紧凑型排列，中间遇到0则后续无效
+        byte[] byTemplateName;
+        try {
+            byTemplateName = "CardTemplatePlan_2".getBytes("GBK");
+            //计划模板名称
+            for (int i = 0; i < HCNetSDK.NAME_LEN; i++) {
+                struPlanTemCfg.byTemplateName[i] = 0;
+            }
+            System.arraycopy(byTemplateName, 0, struPlanTemCfg.byTemplateName, 0, byTemplateName.length);
+        } catch (UnsupportedEncodingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        struPlanTemCfg.write();
+        IntByReference pInt = new IntByReference(0);
+        Pointer lpStatusList = pInt.getPointer();
+        if (false == hCNetSDK.NET_DVR_SetDeviceConfig(lUserID, HCNetSDK.NET_DVR_SET_CARD_RIGHT_PLAN_TEMPLATE_V50, 1, struPlanCond.getPointer(), struPlanCond.size(), lpStatusList, struPlanTemCfg.getPointer(), struPlanTemCfg.size())) {
+            System.out.println("NET_DVR_SET_CARD_RIGHT_PLAN_TEMPLATE_V50失败，错误号：" + hCNetSDK.NET_DVR_GetLastError());
+            return;
+        }
+        System.out.println("NET_DVR_SET_CARD_RIGHT_PLAN_TEMPLATE_V50成功！");
+        //获取卡权限周计划参数
+        HCNetSDK.NET_DVR_WEEK_PLAN_COND struWeekPlanCond = new HCNetSDK.NET_DVR_WEEK_PLAN_COND();
+        struWeekPlanCond.dwSize = struWeekPlanCond.size();
+        struWeekPlanCond.dwWeekPlanNumber = 2;
+        struWeekPlanCond.wLocalControllerID = 0;
+        HCNetSDK.NET_DVR_WEEK_PLAN_CFG struWeekPlanCfg = new HCNetSDK.NET_DVR_WEEK_PLAN_CFG();
+        struWeekPlanCond.write();
+        struWeekPlanCfg.write();
+        Pointer lpCond = struWeekPlanCond.getPointer();
+        Pointer lpInbuferCfg = struWeekPlanCfg.getPointer();
+        if (false == hCNetSDK.NET_DVR_GetDeviceConfig(lUserID, HCNetSDK.NET_DVR_GET_CARD_RIGHT_WEEK_PLAN_V50, 1, lpCond, struWeekPlanCond.size(), lpStatusList, lpInbuferCfg, struWeekPlanCfg.size())) {
+            System.out.println("NET_DVR_GET_CARD_RIGHT_WEEK_PLAN_V50失败，错误号：" + hCNetSDK.NET_DVR_GetLastError());
+            return;
+        }
+        struWeekPlanCfg.read();
+        struWeekPlanCfg.byEnable = 1; //是否使能：0- 否，1- 是
+        /**避免时间段交叉，先初始化， 七天八小时*/
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 8; j++) {
+                struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[j].byEnable = 0;
+                struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[j].struTimeSegment.struBeginTime.byHour = 0;
+                struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[j].struTimeSegment.struBeginTime.byMinute = 0;
+                struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[j].struTimeSegment.struBeginTime.bySecond = 0;
+                struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[j].struTimeSegment.struEndTime.byHour = 0;
+                struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[j].struTimeSegment.struEndTime.byMinute = 0;
+                struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[j].struTimeSegment.struEndTime.bySecond = 0;
+            }
+        }
+        /**一周7天，全天24小时*/
+        for (int i = 0; i < 7; i++) {
+            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].byEnable = 1;
+            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].struTimeSegment.struBeginTime.byHour = 14;
+            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].struTimeSegment.struBeginTime.byMinute = 0;
+            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].struTimeSegment.struBeginTime.bySecond = 0;
+            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].struTimeSegment.struEndTime.byHour = 16;
+            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].struTimeSegment.struEndTime.byMinute = 0;
+            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].struTimeSegment.struEndTime.bySecond = 0;
+        }
+        /**一周7天，每天设置2个时间段*/
+        /*for(int i=0;i<7;i++)
+        {
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].byEnable = 1;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].struTimeSegment.struBeginTime.byHour = 0;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].struTimeSegment.struBeginTime.byMinute = 0;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].struTimeSegment.struBeginTime.bySecond = 0;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].struTimeSegment.struEndTime.byHour = 11;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].struTimeSegment.struEndTime.byMinute = 59;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[0].struTimeSegment.struEndTime.bySecond = 59;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[1].byEnable = 1;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[1].struTimeSegment.struBeginTime.byHour = 13;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[1].struTimeSegment.struBeginTime.byMinute = 30;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[1].struTimeSegment.struBeginTime.bySecond = 0;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[1].struTimeSegment.struEndTime.byHour = 19;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[1].struTimeSegment.struEndTime.byMinute = 59;
+	            struWeekPlanCfg.struPlanCfg[i].struPlanCfgDay[1].struTimeSegment.struEndTime.bySecond = 59;
+	    }*/
+        struWeekPlanCfg.write();
+        //设置卡权限周计划参数
+        if (false == hCNetSDK.NET_DVR_SetDeviceConfig(lUserID, HCNetSDK.NET_DVR_SET_CARD_RIGHT_WEEK_PLAN_V50, 1, lpCond, struWeekPlanCond.size(), lpStatusList, lpInbuferCfg, struWeekPlanCfg.size())) {
+            System.out.println("NET_DVR_SET_CARD_RIGHT_WEEK_PLAN_V50失败，错误号：" + hCNetSDK.NET_DVR_GetLastError());
+        }else {
+            System.out.println("NET_DVR_SET_CARD_RIGHT_WEEK_PLAN_V50成功！");
+        }
+    }
+
+    /**
+     * 获取/设置事件卡号联动配置参数
+     * @param userID 登录设备句柄ID
+     */
+    public static void SetEventCardLingageCfg(int userID)
+    {
+        HCNetSDK.NET_DVR_EVENT_CARD_LINKAGE_COND struEventCardLinkCond  = new HCNetSDK.NET_DVR_EVENT_CARD_LINKAGE_COND();
+        struEventCardLinkCond.dwSize = struEventCardLinkCond.size();
+        struEventCardLinkCond.dwEventID = 1;
+        struEventCardLinkCond.wLocalControllerID = 0;
+        struEventCardLinkCond.write();
+        HCNetSDK.NET_DVR_EVENT_LINKAGE_CARD_CFG_V51 netDvrEventCardLinkageCfgV51 = new HCNetSDK.NET_DVR_EVENT_LINKAGE_CARD_CFG_V51();
+        netDvrEventCardLinkageCfgV51.read();
+        netDvrEventCardLinkageCfgV51.dwSize = netDvrEventCardLinkageCfgV51.size();
+        netDvrEventCardLinkageCfgV51.write();
+        Pointer lpCond1 = struEventCardLinkCond.getPointer();
+        Pointer lpInbuferCfg1 = netDvrEventCardLinkageCfgV51.getPointer();
+        IntByReference intByReference = new IntByReference(0);
+        Pointer lpStatusList1 = intByReference.getPointer();
+        boolean b_GetCfg = hCNetSDK.NET_DVR_GetDeviceConfig(userID, HCNetSDK.NET_DVR_GET_EVENT_CARD_LINKAGE_CFG_V51, 1,
+                lpCond1,struEventCardLinkCond.size(),lpStatusList1, lpInbuferCfg1, netDvrEventCardLinkageCfgV51.size());
+        if (b_GetCfg) {
+            System.out.println("获取事件/卡号联动配置参数成功");
+            netDvrEventCardLinkageCfgV51.uLinkageInfo.setType(HCNetSDK.NET_DVR_EVENT_LINKAGE_INFO.class);
+            netDvrEventCardLinkageCfgV51.read();
+            System.out.printf("是否联动抓拍: %d\n", netDvrEventCardLinkageCfgV51.byCapturePic);
+            System.out.printf("事件源 ID: %d\n", netDvrEventCardLinkageCfgV51.dwEventSourceID);
+            System.out.printf("事件联动参数-事件主类型: %s\n", netDvrEventCardLinkageCfgV51.uLinkageInfo.struEventLinkage.wMainEventType);
+            System.out.printf("事件联动参数-事件次类型: %s\n", netDvrEventCardLinkageCfgV51.uLinkageInfo.struEventLinkage.wSubEventType);
+        } else {
+            System.out.println("获取事件/卡号联动配置参数失败，错误码为 " + hCNetSDK.NET_DVR_GetLastError());
+            return;
+        }
+
+        netDvrEventCardLinkageCfgV51.dwEventSourceID = 1;
+        netDvrEventCardLinkageCfgV51.byProMode = 0;
+        netDvrEventCardLinkageCfgV51.byCapturePic = 1;//联动抓图
+        netDvrEventCardLinkageCfgV51.byRecordVideo = 0;
+        netDvrEventCardLinkageCfgV51.byMainDevStopBuzzer = 0;
+        netDvrEventCardLinkageCfgV51.wAudioDisplayID = 0;
+        netDvrEventCardLinkageCfgV51.byAudioDisplayMode = 0;
+        //struEventCardLinkCfg.uLinkageInfo.setType(NET_DVR_EVENT_LINKAGE_INFO.class);
+        netDvrEventCardLinkageCfgV51.uLinkageInfo.struEventLinkage.wMainEventType = 3;//事件主类型，0-设备事件，1-报警输入事件，2-门事件，3-读卡器事件
+        netDvrEventCardLinkageCfgV51.uLinkageInfo.struEventLinkage.wSubEventType = 25;//EVENT_ACS_FINGERPRINT_PASSWD_VERIFY_PASS;
+        struEventCardLinkCond.dwEventID = 1;
+        struEventCardLinkCond.wLocalControllerID = 0;
+        struEventCardLinkCond.write();
+        netDvrEventCardLinkageCfgV51.write();
+        if (false == hCNetSDK.NET_DVR_SetDeviceConfig(userID, HCNetSDK.NET_DVR_SET_EVENT_CARD_LINKAGE_CFG_V51, 1, lpCond1, struEventCardLinkCond.size(),
+                lpStatusList1, lpInbuferCfg1, netDvrEventCardLinkageCfgV51.size()))
+        {
+            int iErr = hCNetSDK.NET_DVR_GetLastError();
+            System.out.println("设置事件/卡号联动配置参数失败，错误码为"+iErr);
+            return;
+        }
+        else{
+            System.out.println("设置事件/卡号联动配置参数成功");
+            return;
+        }
+
+    }
+}

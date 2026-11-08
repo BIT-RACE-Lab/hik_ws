@@ -1,0 +1,43 @@
+{
+  "CombinateBroadcast": {
+    "enabled": true,
+    "volume": 1,
+    "vehicleBroadcastEnabled": true,
+    "ctrlMode": "camera",
+    "allowListBroadcastEnabled": false,
+    "blockListBroadcastEnabled": false,
+    "temporaryListBroadcastEnabled": false,
+    "BroadcastInfoList": [{
+      "BroadcastInfo": {
+        "id": 1,
+        "value": "plate"
+      }
+    },
+      {
+        "BroadcastInfo": {
+          "id": 2,
+          "value": "plateType"
+        }
+      }
+    ],
+    "volumeTimeEnabled": true,
+    "VolumeTimeBlockList": [{
+      "TimeBlock": {
+        "id": 1,
+        "volume": 1,
+        "beginTime": "07:00",
+        "endTime": "21:00"
+      }
+    },
+      {
+        "TimeBlock": {
+          "id": 2,
+          "volume": 1,
+          "beginTime": "21:00",
+          "endTime": "07:00"
+        }
+      }
+    ],
+    "broadcastPort": "audioPort"
+  }
+}

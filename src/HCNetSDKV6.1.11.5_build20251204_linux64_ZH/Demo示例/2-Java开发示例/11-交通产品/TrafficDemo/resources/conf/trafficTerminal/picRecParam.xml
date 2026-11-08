@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PicRecInfoSearchDescription>
+    <searchID>${searchID}</searchID>
+    <VehicleList>
+        <Vehicle>
+            <vehicleID>${vehicleID}</vehicleID>
+            <ctrl>${ctrl}</ctrl>
+            <drive>${drive}</drive>
+            <part>${part}</part>
+            <fileNo>${fileNo}</fileNo>
+            <startOffset>${startOffset}</startOffset>
+            <picLen>${picLen}</picLen>
+            <captureTime>${captureTime}</captureTime>
+            <violationType/>
+        </Vehicle>
+    </VehicleList>
+</PicRecInfoSearchDescription>

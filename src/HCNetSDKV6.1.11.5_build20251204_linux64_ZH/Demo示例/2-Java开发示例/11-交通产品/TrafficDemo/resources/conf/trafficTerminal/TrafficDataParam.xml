@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DataOperation>
+    <operationType>${operationType}</operationType>
+    <searchCond>
+        <searchID>${searchID}</searchID>
+        <timeSpanList>
+            <timeSpan>
+                <startTime>${startTime}</startTime>
+                <endTime>${endTime}</endTime>
+            </timeSpan>
+        </timeSpanList>
+        <criteria>
+            <dataType>${dataType}</dataType>
+            <violationType>${violationType}</violationType>
+            <channel>${channel}</channel>
+            <plateType>${plateType}</plateType>
+            <plateColor>${plateColor}</plateColor>
+            <direction>${direction}</direction>
+            <trafficSurveyVehicleType>${trafficSurveyVehicleType}</trafficSurveyVehicleType>
+            <plate>${plate}</plate>
+            <speedMin>${speedMin}</speedMin>
+            <speedMax>${speedMax}</speedMax>
+            <vehicleType>${vehicleType}</vehicleType>
+            <vehicleColor>${vehicleColor}</vehicleColor>
+            <laneNo>${laneNo}</laneNo>
+            <surveilType>${surveilType}</surveilType>
+            <romoteHost>${romoteHost}</romoteHost>
+            <analysised>${analysised}</analysised>
+            <matchedResult>${matchedResult}</matchedResult>
+            <vehicleInfo>
+                <tollRoadVehicleSeries>${tollRoadVehicleSeries}</tollRoadVehicleSeries>
+                <tollRoadVehicleType>${tollRoadVehicleType}</tollRoadVehicleType>
+            </vehicleInfo>
+            <standardAxleTypeInfo>
+                <axleType>${axleType}</axleType>
+            </standardAxleTypeInfo>
+            <features>
+                <dangmark>${dangmark}</dangmark>
+            </features>
+            <sendFlag>${sendFlag}</sendFlag>
+        </criteria>
+        <searchResultPosition>${searchResultPosition}</searchResultPosition>
+        <maxResults>${maxResults}</maxResults>
+        <vehicleSubTypeList>${vehicleSubTypeList}</vehicleSubTypeList>
+    </searchCond>
+</DataOperation>

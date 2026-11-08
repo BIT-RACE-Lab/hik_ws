@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="JavaDemo_STDXMLConfig">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/jna.jar!/" />
+      <root url="jar://$PROJECT_DIR$/examples.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

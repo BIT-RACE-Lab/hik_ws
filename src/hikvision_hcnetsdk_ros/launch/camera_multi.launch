@@ -1,0 +1,51 @@
+<launch>
+  <arg name="sdk_root" default="/home/cyz/hik_ws/src/HCNetSDKV6.1.11.5_build20251204_linux64_ZH"/>
+  <arg name="sdk_lib_dir" default="$(arg sdk_root)/库文件"/>
+  <arg name="sdk_com_dir" default="$(arg sdk_lib_dir)/HCNetSDKCom"/>
+  <arg name="camera_ip1" default="192.168.2.122"/>
+  <arg name="camera_ip2" default="192.168.2.103"/>
+  <arg name="camera_port" default="8000"/>
+  <arg name="camera_user" default="admin"/>
+  <arg name="camera_password" default=""/>
+  <arg name="channel1" default="1"/>
+  <arg name="channel2" default="1"/>
+  <arg name="stream_type" default="0"/>
+  <arg name="display" default="true"/>
+  <arg name="topic" default="image_raw"/>
+  <arg name="frame_id" default="camera"/>
+
+  <group ns="camera1">
+    <node pkg="hikvision_hcnetsdk_ros" type="hikvision_camera_node.py" name="hikvision_camera" output="screen">
+      <param name="sdk_root" value="$(arg sdk_root)"/>
+      <param name="sdk_lib_dir" value="$(arg sdk_lib_dir)"/>
+      <param name="sdk_com_dir" value="$(arg sdk_com_dir)"/>
+      <param name="camera_ip" value="$(arg camera_ip1)"/>
+      <param name="camera_port" value="$(arg camera_port)"/>
+      <param name="camera_user" value="$(arg camera_user)"/>
+      <param name="camera_password" value="$(arg camera_password)"/>
+      <param name="channel" value="$(arg channel1)"/>
+      <param name="stream_type" value="$(arg stream_type)"/>
+      <param name="display" value="$(arg display)"/>
+      <param name="topic" value="image_raw_back"/>
+      <param name="frame_id" value="camera_back"/>
+      <env name="LD_LIBRARY_PATH" value="$(arg sdk_lib_dir):$(arg sdk_com_dir):$(env LD_LIBRARY_PATH)"/>
+    </node>
+  </group>
+  <group ns="camera2">
+    <node pkg="hikvision_hcnetsdk_ros" type="hikvision_camera_node.py" name="hikvision_camera" output="screen">
+      <param name="sdk_root" value="$(arg sdk_root)"/>
+      <param name="sdk_lib_dir" value="$(arg sdk_lib_dir)"/>
+      <param name="sdk_com_dir" value="$(arg sdk_com_dir)"/>
+      <param name="camera_ip" value="$(arg camera_ip2)"/>
+      <param name="camera_port" value="$(arg camera_port)"/>
+      <param name="camera_user" value="$(arg camera_user)"/>
+      <param name="camera_password" value="$(arg camera_password)"/>
+      <param name="channel" value="$(arg channel2)"/>
+      <param name="stream_type" value="$(arg stream_type)"/>
+      <param name="display" value="$(arg display)"/>
+      <param name="topic" value="image_raw_front"/>
+      <param name="frame_id" value="camera_front"/>
+      <env name="LD_LIBRARY_PATH" value="$(arg sdk_lib_dir):$(arg sdk_com_dir):$(env LD_LIBRARY_PATH)"/>
+    </node>
+  </group>
+</launch>

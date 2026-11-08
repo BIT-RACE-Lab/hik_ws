@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="JavaAudioDemo:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/JavaAudioDemo_jar</output-path>
+    <root id="archive" name="JavaAudioDemo.jar">
+      <element id="module-output" name="JavaAudioDemo" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/jna.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/examples.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

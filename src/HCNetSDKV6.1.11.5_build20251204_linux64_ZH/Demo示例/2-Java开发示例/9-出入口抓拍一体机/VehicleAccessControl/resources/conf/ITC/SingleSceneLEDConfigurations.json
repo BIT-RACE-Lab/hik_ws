@@ -1,0 +1,87 @@
+{
+  "SingleSceneLEDConfigurations": {
+    "sid": 1,
+    "mode": "passingVehicle",
+    "showFreeEnabled": true,
+    "displayTime": 20,
+    "vehicleDisplayEnabled": true,
+    "allowListDisplayEnabled": false,
+    "blockListDisplayEnabled": false,
+    "temporaryListDisplayEnabled": false,
+    "ctrlMode": "platform",
+    "LEDConfigurationList": [{
+      "LEDConfiguration": {
+        "id": 1,
+        "enabled": true,
+        "ShowInfoList": [{
+          "ShowInfo": {
+            "id": 1,
+            "fontSize": 16,
+            "fontColor": "green",
+            "speedType": "medium",
+            "displayMode": "instant",
+            "LineInfoList": [{
+              "LineInfo": {
+                "id": 1,
+                "customValue": "测试测试123"
+              }
+            }]
+          }
+        },
+          {
+            "ShowInfo": {
+              "id": 2,
+              "fontSize": 16,
+              "fontColor": "green",
+              "speedType": "medium",
+              "displayMode": "instant",
+              "LineInfoList": [{
+                "LineInfo": {
+                  "id": 1,
+                  "customValue": "浙A12345"
+                }
+              }]
+            }
+          },
+          {
+            "ShowInfo": {
+              "id": 3,
+              "fontSize": 16,
+              "fontColor": "green",
+              "speedType": "medium",
+              "displayMode": "instant",
+              "LineInfoList": [{
+                "LineInfo": {
+                  "id": 1,
+                  "customValue": "2024-06-20"
+                }
+              }]
+            }
+          },
+          {
+            "ShowInfo": {
+              "id": 4,
+              "fontSize": 16,
+              "fontColor": "green",
+              "speedType": "medium",
+              "displayMode": "instant",
+              "LineInfoList": [{
+                "LineInfo": {
+                  "id": 1,
+                  "customValue": "门口123"
+                }
+              }]
+            }
+          }
+        ]
+      }
+    }],
+    "LedInfo": {
+      "communicateMode": "serial",
+      "networkCtrlInfo": {
+        "ipaddr": "0.0.0.0",
+        "portNo": 10000
+      }
+    }
+  }
+}

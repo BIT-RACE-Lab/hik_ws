@@ -1,0 +1,45 @@
+[2024-08-26 10:11:13.286][DBG] CCoreGlobalCtrlBase::LoadDSo, HPR_LoadDSo Succ, Path[E:/04Demo/Java_Demo/官网更新Demo/V20240806/Win64/6-参数获取与配置/ParmConfigDemo/lib/zlib1.dll], hHandleRet[1568800768]
+[2024-08-26 10:11:13.286][INF] The COM:HCCoreBase ver is 6.1.4.15, 2020_03_05. Async:1.
+[2024-08-26 10:11:13.286][INF] The COM:Core ver is 6.1.9.48, 2023_04_10. Async:1.
+[2024-08-26 10:11:13.286][INF] This HCNetSDK ver is 6.1.9.48 Ver 2023_04_10.
+[2024-08-26 10:11:13.373][INF] Login dev 10.9.137.190:8000.
+[2024-08-26 10:11:13.373][INF] dwTotalNum[2048]
+[2024-08-26 10:11:13.374][INF] Private connect 10.9.137.190:8000 sock=1788 this=0x9d1904 cmd=0x10000 port=51957
+[2024-08-26 10:11:13.374][INF] LogonDev1 in[10.9.137.190:8000]
+[2024-08-26 10:11:13.375][DBG] CCoreGlobalCtrlBase::LoadDSo, HPR_LoadDSo Succ, Path[E:/04Demo/Java_Demo/官网更新Demo/V20240806/Win64/6-参数获取与配置/ParmConfigDemo/lib/libcrypto-1_1-x64.dll], hHandleRet[-879820800]
+[2024-08-26 10:11:13.375][DBG] Load [libcrypto-1_1-x64.dll] SUCC, Real Path[E:\04Demo\Java_Demo\官网更新Demo\V20240806\Win64\6-参数获取与配置\ParmConfigDemo\lib\libcrypto-1_1-x64.dll]
+[2024-08-26 10:11:13.375][DBG] CCoreGlobalCtrlBase::LoadDSo, HPR_LoadDSo Succ, Path[E:/04Demo/Java_Demo/官网更新Demo/V20240806/Win64/6-参数获取与配置/ParmConfigDemo/lib/libssl-1_1-x64.dll], hHandleRet[-458293248]
+[2024-08-26 10:11:13.375][DBG] Load [libssl-1_1-x64.dll] SUCC, Real Path[E:\04Demo\Java_Demo\官网更新Demo\V20240806\Win64\6-参数获取与配置\ParmConfigDemo\lib\libssl-1_1-x64.dll]
+[2024-08-26 10:11:13.375][INF] SSLTRANSAPI::IsAllAPILoaded, SSL_library_init Unload
+[2024-08-26 10:11:13.375][INF] OpenSSL, Not All Function Loaded!
+[2024-08-26 10:11:13.375][INF] SSLTRANSAPI::PrintVersion, OpenSSL version info [OpenSSL 1.1.1l  24 Aug 2021]
+[2024-08-26 10:11:13.375][INF] CSSLTrans::SSLCtxInit, dwSSLVersion[6], m_fnTLSServerMethod
+[2024-08-26 10:11:13.379][ERR] CSSLTrans::SSLTrans_CTX_Load_CA, invalid path[E:/04Demo/Java_Demo/官网更新Demo/V20240806/Win64/6-参数获取与配置/ParmConfigDemo/lib/cert/\]
+[2024-08-26 10:11:18.126][DBG] CComBase::Load, Load szDllPath[E:/04Demo/Java_Demo/官网更新Demo/V20240806/Win64/6-参数获取与配置/ParmConfigDemo/lib/HCNetSDKCom/HCVoiceTalk.dll] SUCC
+[2024-08-26 10:11:18.126][INF] AbilityAnalyze---Init-- start
+[2024-08-26 10:11:18.136][INF] The COM:VoiceTalk ver is 6.1.9.48, 2023_04_10.
+[2024-08-26 10:11:18.257][DBG] CComBase::Load, Load szDllPath[E:/04Demo/Java_Demo/官网更新Demo/V20240806/Win64/6-参数获取与配置/ParmConfigDemo/lib/HCNetSDKCom/HCGeneralCfgMgr.dll] SUCC
+[2024-08-26 10:11:18.257][INF] The COM:HCGeneralCfgMgr ver is 6.1.9.48, 2023_04_10.
+[2024-08-26 10:11:18.312][DBG] CComBase::Load, Load szDllPath[E:/04Demo/Java_Demo/官网更新Demo/V20240806/Win64/6-参数获取与配置/ParmConfigDemo/lib/HCNetSDKCom/HCPlayBack.dll] SUCC
+[2024-08-26 10:11:18.313][INF] The COM:HCPlayback ver is 6.1.9.48, 2023_04_10.
+[2024-08-26 10:11:18.394][DBG] CComBase::Load, Load szDllPath[E:/04Demo/Java_Demo/官网更新Demo/V20240806/Win64/6-参数获取与配置/ParmConfigDemo/lib/HCNetSDKCom/HCIndustry.dll] SUCC
+[2024-08-26 10:11:18.394][INF] The COM:HCIndustry ver is 6.1.9.48, 2023_04_10.
+[2024-08-26 10:11:18.420][DBG] CComBase::Load, Load szDllPath[E:/04Demo/Java_Demo/官网更新Demo/V20240806/Win64/6-参数获取与配置/ParmConfigDemo/lib/HCNetSDKCom/HCDisplay.dll] SUCC
+[2024-08-26 10:11:18.420][INF] The COM:HCDisplay ver is 6.1.9.48, 2023_04_10.
+[2024-08-26 10:11:18.422][DBG] CComBase::Load, Load szDllPath[E:/04Demo/Java_Demo/官网更新Demo/V20240806/Win64/6-参数获取与配置/ParmConfigDemo/lib/HCNetSDKCom/HCPreview.dll] SUCC
+[2024-08-26 10:11:18.422][INF] The COM:Preview ver is 6.1.9.48, 2023_04_10.
+[2024-08-26 10:11:18.464][DBG] CComBase::Load, Load szDllPath[E:/04Demo/Java_Demo/官网更新Demo/V20240806/Win64/6-参数获取与配置/ParmConfigDemo/lib/HCNetSDKCom/HCAlarm.dll] SUCC
+[2024-08-26 10:11:18.465][INF] The COM:HCAlarm ver is 6.1.9.48, 2023_04_10.
+[2024-08-26 10:11:18.485][INF] Private connect 10.9.137.190:8000 sock=1852 this=0x9d1904 cmd=0x110154 port=51959
+[2024-08-26 10:11:18.593][INF] Private connect 10.9.137.190:8000 sock=1852 this=0x9d1904 cmd=0x110012 port=51960
+[2024-08-26 10:11:18.672][INF] Private connect 10.9.137.190:8000 sock=1836 this=0x9d1904 cmd=0x110012 port=51961
+[2024-08-26 10:11:18.752][INF] Private connect 10.9.137.190:8000 sock=1840 this=0x9d1904 cmd=0x110012 port=51962
+[2024-08-26 10:11:18.870][INF] Private connect 10.9.137.190:8000 sock=1840 this=0x9d1904 cmd=0x110012 port=51963
+[2024-08-26 10:11:18.951][INF] Private connect 10.9.137.190:8000 sock=1840 this=0x9d1904 cmd=0x110012 port=51964
+[2024-08-26 10:11:19.010][INF] Private connect 10.9.137.190:8000 sock=1836 this=0x9d1904 cmd=0x110012 port=51967
+[2024-08-26 10:11:19.070][INF] Private connect 10.9.137.190:8000 sock=1852 this=0x9d1904 cmd=0x110012 port=51968
+[2024-08-26 10:11:19.131][INF] Private connect 10.9.137.190:8000 sock=1836 this=0x9d1904 cmd=0x110012 port=51971
+[2024-08-26 10:11:24.456][INF] COM_Logout[0][0]
+[2024-08-26 10:11:24.456][DBG] CUserMgr::UnRegisterHeartProxy[0]
+[2024-08-26 10:11:24.457][INF] Private connect 10.9.137.190:8000 sock=1768 this=0x9d1904 cmd=0x10100 port=51975
+[2024-08-26 10:11:24.459][INF] CTransUnitMgr::UnloadTransUnitLib

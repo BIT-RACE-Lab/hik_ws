@@ -1,0 +1,164 @@
+{
+  "LCD": {
+    "displayPassingVehicleInfoEnabled": true,
+    "displayPlateEnable": true,
+    "displayTimeEnable": true,
+    "timeFormat": "hh-mm-ss",
+    "CustomContentList": [{
+      "CustomContent": {
+        "id": 1,
+        "fontSizeLine": 20,
+        "fontColorLine": {
+          "R": 240,
+          "G": 0,
+          "B": 0
+        },
+        "fontBoldLine": false,
+        "passVehicleDisplayEnabled": false,
+        "fontColor": "f00000",
+        "isCustomContent": true,
+        "content": "${content}"
+      },
+      "$$hashKey": "04T"
+    }, {
+      "CustomContent": {
+        "id": 2,
+        "value": "plate",
+        "fontSizeLine": 40,
+        "fontColorLine": {
+          "R": 255,
+          "G": 255,
+          "B": 255
+        },
+        "fontBoldLine": false,
+        "passVehicleDisplayEnabled": true,
+        "fontColor": "ffffff",
+        "isCustomContent": false
+      }
+    }, {
+      "CustomContent": {
+        "id": 3,
+        "value": "triggerTime",
+        "fontSizeLine": 40,
+        "fontColorLine": {
+          "R": 255,
+          "G": 255,
+          "B": 255
+        },
+        "fontBoldLine": false,
+        "passVehicleDisplayEnabled": true,
+        "fontColor": "ffffff",
+        "isCustomContent": false
+      }
+    }],
+    "fontSize": 50,
+    "fontColor": {
+      "R": 0,
+      "G": 0,
+      "B": 255
+    },
+    "MediaDataInfo": {
+      "cycleIntervalTime": 60,
+      "cyclePlayOrder": []
+    },
+    "ctrlMode": "${ctrlMode}",
+    "allowListDisplayEnabled": false,
+    "blockListDisplayEnabled": false,
+    "temporaryListDisplayEnabled": false,
+    "fanSpeedLevel": "close",
+    "temperatureThreshold": 0,
+    "screenWidth": 0,
+    "screenHeight": 0,
+    "softwareVersion": "V2.0.0_build20240314STD_|240314",
+    "BackBright": {
+      "enabled": false,
+      "ctrlMode": "manualAndTime",
+      "value": 0,
+      "timeCtrlEnabled": false,
+      "TimeCtrlList": [{
+        "TimeCtrl": {
+          "startTime": "00:00",
+          "endTime": "00:00",
+          "value": 0,
+          "vehiclePassingValue": 0
+        }
+      }]
+    },
+    "displayTime": 20,
+    "HintContentList": [{
+      "HintContent": {
+        "id": 1,
+        "content": "欢迎光临",
+        "contentType": "free",
+        "fontSizeLine": 50,
+        "fontColorLine": {
+          "R": 240,
+          "G": 0,
+          "B": 0
+        },
+        "fontBoldLine": false,
+        "fontColor": "f00000",
+        "isCustomContent": true
+      },
+      "$$hashKey": "04N"
+    }, {
+      "HintContent": {
+        "id": 2,
+        "content": "欢迎光临",
+        "contentType": "passingVehicle",
+        "fontSizeLine": 50,
+        "fontColorLine": {
+          "R": 255,
+          "G": 255,
+          "B": 255
+        },
+        "fontBoldLine": false,
+        "fontColor": "ffffff",
+        "isCustomContent": true
+      }
+    }],
+    "parkingLotDisplayEnable": false,
+    "parkingLotDisplay": {
+      "textDisplay": {
+        "fontSize": 50,
+        "fontColor": {
+          "R": 255,
+          "G": 255,
+          "B": 255
+        },
+        "fontBoldEnabled": false
+      },
+      "numDisplay": {
+        "fontSize": 50,
+        "fontColor": {
+          "R": 0,
+          "G": 255,
+          "B": 0
+        },
+        "fontBoldEnabled": false
+      }
+    },
+    "displayPlateTypeEnable": false,
+    "displayValidityPeriodEnable": false,
+    "logoDisplayEnable": false,
+    "mediaOccupyConfigList": [{
+      "mediaOccupyMode": "mediaRatioOccupy",
+      "mediaOccupyRatio": 33,
+      "contentType": "free"
+    }, {
+      "mediaOccupyMode": "mediaRatioOccupy",
+      "mediaOccupyRatio": 33,
+      "contentType": "passingVehicle"
+    }],
+    "characterMovementMode": "flipping",
+    "fontColorSixteen": "0000ff",
+    "timeFormatEnabled": true,
+    "contentType": "free",
+    "MediaOccupyMode": "mediaRatioOccupy",
+    "MediaOccupyModePassing": "mediaRatioOccupy"
+  },
+  "powerOffSaveEnabled": true,
+  "MediaOccupyRatioPassing": 33,
+  "backBrightCtrlMode": "manualAndTime",
+  "MediaDataList": []
+}

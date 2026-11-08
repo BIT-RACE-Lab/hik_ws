@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>hikvision_hcnetsdk_ros</name>
+  <version>0.1.0</version>
+  <description>Hikvision HCNetSDK ROS camera driver that publishes sensor_msgs/Image and supports launch-based startup.</description>
+  <maintainer email="cyz@example.com">cyz</maintainer>
+  <license>Proprietary</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>cv_bridge</depend>
+  <depend>std_msgs</depend>
+
+  <export/>
+</package>
